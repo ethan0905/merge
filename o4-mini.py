@@ -175,14 +175,15 @@ class Delegate(NSObject):
             self.up_btn.setHidden_(True)
         if hasattr(self, "down_btn"):
             self.down_btn.setHidden_(True)
-
         result_tag = "failed"
+
         try:
             code = generate_python_code(prompt)
             self.last_code = code
             ok = run_code(code)
             self.last_success = ok
             result_tag = "success(generated)" if ok else "failed"
+
             NSLog("[Agent] Success" if ok else "[Agent] Failed")
         except Exception as exc:
             self.last_success = False

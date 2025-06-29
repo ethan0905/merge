@@ -172,6 +172,7 @@ class ChatAgentWindow(NSWindow):
         self.status_lbl = status_lbl
         self.up_btn = up_btn
         self.down_btn = down_btn
+
         return self
 
     def submit_(self, _):
