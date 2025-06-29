@@ -24,6 +24,8 @@ from Cocoa import (
     NSTextField,
     NSFocusRingTypeNone,
     NSButton,
+    NSProgressIndicator,
+    NSProgressIndicatorStyleSpinning,
     NSViewWidthSizable,
     NSVisualEffectView,
     NSEvent,
@@ -51,6 +53,7 @@ class ChatAgentWindow(NSWindow):
     BAR_HEIGHT = 40
     ARROW_SIZE = 28
     MARGIN = 14
+    STATUS_HEIGHT = 24
 
     def canBecomeKeyWindow(self):
         return True
@@ -59,7 +62,7 @@ class ChatAgentWindow(NSWindow):
         return True
 
     def init(self):
-        frame = NSMakeRect(0, 0, 520, self.BAR_HEIGHT)
+        frame = NSMakeRect(0, 0, 520, self.BAR_HEIGHT + self.STATUS_HEIGHT)
         style = NSWindowStyleMaskBorderless | NSWindowStyleMaskFullSizeContentView
         self = objc.super(ChatAgentWindow, self).initWithContentRect_styleMask_backing_defer_(
             frame, style, NSBackingStoreBuffered, False
@@ -76,8 +79,10 @@ class ChatAgentWindow(NSWindow):
         self.contentView().layer().setCornerRadius_(self.BAR_HEIGHT / 2)
         self.contentView().layer().setMasksToBounds_(True)
 
-        # Vibrant blur background
-        vibrant = DraggableVibrantView.alloc().initWithFrame_(self.contentView().bounds())
+        # Vibrant blur background for the input area
+        vibrant = DraggableVibrantView.alloc().initWithFrame_(
+            NSMakeRect(0, self.STATUS_HEIGHT, frame.size.width, self.BAR_HEIGHT)
+        )
         vibrant.setAutoresizingMask_(NSViewWidthSizable)
         vibrant.setMaterial_(NSVisualEffectMaterialSidebar)
         vibrant.setBlendingMode_(NSVisualEffectBlendingModeBehindWindow)
@@ -87,7 +92,7 @@ class ChatAgentWindow(NSWindow):
         # Font + baseline
         font = NSFont.systemFontOfSize_(14)
         line_height = font.defaultLineHeightForFont() + 2
-        input_y = (self.BAR_HEIGHT - line_height) / 2
+        input_y = self.STATUS_HEIGHT + (self.BAR_HEIGHT - line_height) / 2
 
         # Text field
         input_rect = NSMakeRect(
@@ -110,7 +115,7 @@ class ChatAgentWindow(NSWindow):
 
         # Arrow button
         arrow_x = frame.size.width - self.ARROW_SIZE - 6
-        arrow_y = (self.BAR_HEIGHT - self.ARROW_SIZE) / 2
+        arrow_y = self.STATUS_HEIGHT + (self.BAR_HEIGHT - self.ARROW_SIZE) / 2
         send_btn = NSButton.alloc().initWithFrame_(
             NSMakeRect(arrow_x, arrow_y, self.ARROW_SIZE, self.ARROW_SIZE)
         )
@@ -122,6 +127,39 @@ class ChatAgentWindow(NSWindow):
         send_btn.setCornerRadius_(self.ARROW_SIZE / 2)
         vibrant.addSubview_(send_btn)
 
+        spinner = NSProgressIndicator.alloc().initWithFrame_(
+            NSMakeRect(arrow_x, arrow_y, self.ARROW_SIZE, self.ARROW_SIZE)
+        )
+        spinner.setStyle_(NSProgressIndicatorStyleSpinning)
+        spinner.setDisplayedWhenStopped_(False)
+        spinner.setHidden_(True)
+        vibrant.addSubview_(spinner)
+
+        status_lbl = NSTextField.alloc().initWithFrame_(
+            NSMakeRect(self.MARGIN, 2, frame.size.width - 2 * self.MARGIN - 60, self.STATUS_HEIGHT - 4)
+        )
+        status_lbl.setEditable_(False)
+        status_lbl.setBezeled_(False)
+        status_lbl.setDrawsBackground_(False)
+        status_lbl.setHidden_(True)
+        self.contentView().addSubview_(status_lbl)
+
+        up_btn = NSButton.alloc().initWithFrame_(
+            NSMakeRect(frame.size.width - self.MARGIN - 50, 2, 20, self.STATUS_HEIGHT - 4)
+        )
+        up_btn.setTitle_("👍")
+        up_btn.setBordered_(False)
+        up_btn.setHidden_(True)
+        self.contentView().addSubview_(up_btn)
+
+        down_btn = NSButton.alloc().initWithFrame_(
+            NSMakeRect(frame.size.width - self.MARGIN - 25, 2, 20, self.STATUS_HEIGHT - 4)
+        )
+        down_btn.setTitle_("👎")
+        down_btn.setBordered_(False)
+        down_btn.setHidden_(True)
+        self.contentView().addSubview_(down_btn)
+
         # Events
         input_field.setTarget_(self)
         input_field.setAction_("submit:")
@@ -130,6 +168,11 @@ class ChatAgentWindow(NSWindow):
 
         self.input_field = input_field
         self.send_btn = send_btn
+        self.spinner = spinner
+        self.status_lbl = status_lbl
+        self.up_btn = up_btn
+        self.down_btn = down_btn
+
         return self
 
     def submit_(self, _):

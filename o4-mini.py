@@ -164,15 +164,43 @@ class Delegate(NSObject):
 
         self.last_prompt = prompt
         self.field.setStringValue_("")
+        if hasattr(self, "send_btn"):
+            self.send_btn.setHidden_(True)
+        if hasattr(self, "spinner"):
+            self.spinner.setHidden_(False)
+            self.spinner.startAnimation_(None)
+        if hasattr(self, "status_lbl"):
+            self.status_lbl.setHidden_(True)
+        if hasattr(self, "up_btn"):
+            self.up_btn.setHidden_(True)
+        if hasattr(self, "down_btn"):
+            self.down_btn.setHidden_(True)
+        result_tag = "failed"
+
         try:
             code = generate_python_code(prompt)
             self.last_code = code
             ok = run_code(code)
             self.last_success = ok
+            result_tag = "success(generated)" if ok else "failed"
+
             NSLog("[Agent] Success" if ok else "[Agent] Failed")
         except Exception as exc:
             self.last_success = False
             NSLog(f"[ERROR] {exc!r}")
+        finally:
+            if hasattr(self, "spinner"):
+                self.spinner.stopAnimation_(None)
+                self.spinner.setHidden_(True)
+            if hasattr(self, "send_btn"):
+                self.send_btn.setHidden_(False)
+            if hasattr(self, "status_lbl"):
+                self.status_lbl.setStringValue_(result_tag)
+                self.status_lbl.setHidden_(False)
+            if hasattr(self, "up_btn"):
+                self.up_btn.setHidden_(False)
+            if hasattr(self, "down_btn"):
+                self.down_btn.setHidden_(False)
 
     def run_(self, _):
         prompt = self.field.stringValue().strip()
@@ -373,6 +401,19 @@ class MiniUIAppDelegate(ui.AppDelegate):
         if hasattr(self.window, "send_btn"):
             self.window.send_btn.setTarget_(GLOBAL_DELEGATE)
             self.window.send_btn.setAction_("submit:")
+            GLOBAL_DELEGATE.send_btn = self.window.send_btn
+        if hasattr(self.window, "spinner"):
+            GLOBAL_DELEGATE.spinner = self.window.spinner
+        if hasattr(self.window, "status_lbl"):
+            GLOBAL_DELEGATE.status_lbl = self.window.status_lbl
+        if hasattr(self.window, "up_btn"):
+            self.window.up_btn.setTarget_(GLOBAL_DELEGATE)
+            self.window.up_btn.setAction_("thumbUp:")
+            GLOBAL_DELEGATE.up_btn = self.window.up_btn
+        if hasattr(self.window, "down_btn"):
+            self.window.down_btn.setTarget_(GLOBAL_DELEGATE)
+            self.window.down_btn.setAction_("thumbDown:")
+            GLOBAL_DELEGATE.down_btn = self.window.down_btn
 
 
 if __name__ == "__main__":
