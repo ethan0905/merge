@@ -132,6 +132,7 @@ class ChatAgentWindow(NSWindow):
         )
         spinner.setStyle_(NSProgressIndicatorStyleSpinning)
         spinner.setDisplayedWhenStopped_(False)
+        spinner.stopAnimation_(None)
         spinner.setHidden_(True)
         vibrant.addSubview_(spinner)
 
@@ -172,7 +173,6 @@ class ChatAgentWindow(NSWindow):
         self.status_lbl = status_lbl
         self.up_btn = up_btn
         self.down_btn = down_btn
-
         return self
 
     def submit_(self, _):
