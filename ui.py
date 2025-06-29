@@ -129,6 +129,7 @@ class ChatAgentWindow(NSWindow):
         send_btn.setAction_("submit:")
 
         self.input_field = input_field
+        self.send_btn = send_btn
         return self
 
     def submit_(self, _):
